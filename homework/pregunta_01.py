@@ -4,7 +4,10 @@
 """
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
-
+import os
+import glob
+import pandas as pd
+from typing import List, Dict
 
 def pregunta_01():
     """
@@ -71,3 +74,65 @@ def pregunta_01():
 
 
     """
+    # --- Definición de Rutas ---
+    ROOT_DIR = "."
+    
+    # ⭐ CORRECCIÓN CLAVE: La carpeta de entrada es 'files/input'
+    FILES_DIR = os.path.join(ROOT_DIR, "files")
+    INPUT_DIR = os.path.join(FILES_DIR, "input")
+    
+    # La carpeta de salida es 'files/output'
+    OUTPUT_DIR = os.path.join(FILES_DIR, "output") 
+    
+    # 1. Asegurar que la carpeta de salida exista
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    def _process_directory(data_type: str) -> pd.DataFrame:
+        """
+        Función auxiliar para procesar recursivamente los archivos .txt 
+        dentro de 'files/input/{data_type}/'.
+        """
+        dataset: List[Dict[str, str]] = []
+        base_path = os.path.join(INPUT_DIR, data_type) # e.g., 'files/input/train'
+        
+        # Patrón de búsqueda recursiva: **/*.txt busca cualquier subcarpeta y archivos .txt.
+        search_pattern = os.path.join(base_path, "**", "*.txt")
+        file_paths = glob.glob(search_pattern, recursive=True)
+
+        if not file_paths:
+            # Esta alerta ayuda a confirmar que la ruta sigue siendo el problema si falla de nuevo
+            print(f"⚠️ Alerta: No se encontraron archivos en el patrón: {search_pattern}")
+
+        for file_path in file_paths:
+            # El target es el nombre del directorio padre ('negative', 'neutral', 'positive')
+            target = os.path.basename(os.path.dirname(file_path))
+
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    phrase = f.read().strip()
+            except IOError:
+                phrase = ""
+            
+            # Construir el registro
+            dataset.append({
+                "phrase": phrase,
+                "target": target, 
+            })
+            
+        return pd.DataFrame(dataset)
+
+    # 2. Procesar los datasets de entrenamiento y prueba
+    df_train = _process_directory("train")
+    df_test = _process_directory("test")
+
+    # 3. Guardar los DataFrames en la carpeta 'files/output/'
+    train_output_path = os.path.join(OUTPUT_DIR, "train_dataset.csv")
+    test_output_path = os.path.join(OUTPUT_DIR, "test_dataset.csv")
+
+    # Guardar sin el índice de Pandas
+    df_train.to_csv(train_output_path, index=False)
+    df_test.to_csv(test_output_path, index=False)
+
+    return df_train, df_test
+
+pregunta_01()
