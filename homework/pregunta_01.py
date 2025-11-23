@@ -77,7 +77,7 @@ def pregunta_01():
     # --- Definición de Rutas ---
     ROOT_DIR = "."
     
-    # ⭐ CORRECCIÓN CLAVE: La carpeta de entrada es 'files/input'
+    
     FILES_DIR = os.path.join(ROOT_DIR, "files")
     INPUT_DIR = os.path.join(FILES_DIR, "input")
     
